@@ -24,7 +24,7 @@ public class UserInterface : MonoBehaviour
 
     private float _interval;
     private float _currentCooldown;
-    private ICalculator _CurrentCalculator;
+    private Calculator _CurrentCalculator;
     private bool _run = false;
     private bool _isFinish = true;
     private Vector3[] _defaultPositions = new Vector3[3];
@@ -56,6 +56,8 @@ public class UserInterface : MonoBehaviour
         config.Tau = float.Parse(TauField.text);
         config.Size = int.Parse(SizeField.text);
         config.TimeMax = float.Parse(TimeMaxField.text);
+        config.MaxTemperature = 200;
+
         _interval = float.Parse(TimeIntervalField.text);
 
         for (int i = 0; i < Targets.Length; i++)

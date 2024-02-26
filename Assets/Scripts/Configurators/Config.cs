@@ -5,6 +5,7 @@ namespace TemperatureSimulator
 {
     public class Config
     {
+        public float MaxTemperature;
         public Texture2D XTarget;
         public Texture2D YTarget;
         public Texture2D ZTarget;
