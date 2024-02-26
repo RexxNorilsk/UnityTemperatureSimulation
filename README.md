@@ -1,0 +1,2 @@
+This project demonstrates the implementation of a temperature modeling solution using the Unity game engine.
+The solution provides an example of how to perform calculations on a three-dimensional grid, with the ability to set various parameters and boundary conditions. The program performs sequential calculations, and visualization is achieved through the use of three textures that can be positioned to display specific areas of the calculated space.
