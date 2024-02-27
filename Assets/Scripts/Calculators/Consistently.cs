@@ -11,23 +11,23 @@ namespace TemperatureSimulator
 
         public override bool CalculateStep()
         {
-            if (_currentTime >= _config.TimeMax)
+            if (_currentTime >= Config.TimeMax)
             {
                 Debug.Log("Finish");
                 return true;
             }
             Debug.Log(_currentTime);
-            for (int i = 0; i < _config.Size; i++)
+            for (int i = 0; i < Config.Size; i++)
             {
-                for (int j = 0; j < _config.Size; j++)
+                for (int j = 0; j < Config.Size; j++)
                 {
-                    for (int k = 0; k < _config.Size; k++)
+                    for (int k = 0; k < Config.Size; k++)
                     {
                         if (i == 0)
                         {
                             SetBorderValue(i, j, k, 0);
                         }
-                        else if (i == _config.Size - 1)
+                        else if (i == Config.Size - 1)
                         {
                             SetBorderValue(i, j, k, 1);
                         }
@@ -35,7 +35,7 @@ namespace TemperatureSimulator
                         {
                             SetBorderValue(i, j, k, 2);
                         }
-                        else if (j == _config.Size - 1)
+                        else if (j == Config.Size - 1)
                         {
                             SetBorderValue(i, j, k, 3);
                         }
@@ -43,7 +43,7 @@ namespace TemperatureSimulator
                         {
                             SetBorderValue(i, j, k, 4);
                         }
-                        else if (k == _config.Size - 1)
+                        else if (k == Config.Size - 1)
                         {
                             SetBorderValue(i, j, k, 5);
                         }
@@ -51,19 +51,19 @@ namespace TemperatureSimulator
                         {
                             if (!_isNew)
                             {
-                                _uNew[GetPos(i, j, k)] = _u[GetPos(i, j, k)] + _coef * (
-                                    _u[GetPos(i + 1, j, k)] +
-                                    _u[GetPos(i - 1, j, k)] +
-                                    _u[GetPos(i, j + 1, k)] +
-                                    _u[GetPos(i, j - 1, k)] +
-                                    _u[GetPos(i, j, k + 1)] +
-                                    _u[GetPos(i, j, k - 1)] -
-                                    6 * _u[GetPos(i, j, k)]
+                                _uNew[GetPos(i, j, k)] = U[GetPos(i, j, k)] + _coef * (
+                                    U[GetPos(i + 1, j, k)] +
+                                    U[GetPos(i - 1, j, k)] +
+                                    U[GetPos(i, j + 1, k)] +
+                                    U[GetPos(i, j - 1, k)] +
+                                    U[GetPos(i, j, k + 1)] +
+                                    U[GetPos(i, j, k - 1)] -
+                                    6 * U[GetPos(i, j, k)]
                                 );
                             }
                             else
                             {
-                                _u[GetPos(i, j, k)] = _uNew[GetPos(i, j, k)] + _coef * (
+                                U[GetPos(i, j, k)] = _uNew[GetPos(i, j, k)] + _coef * (
                                        _uNew[GetPos(i + 1, j, k)] +
                                        _uNew[GetPos(i - 1, j, k)] +
                                        _uNew[GetPos(i, j + 1, k)] +
@@ -83,29 +83,29 @@ namespace TemperatureSimulator
                 RedrawSlice(i);
             }
             _isNew = !_isNew;
-            _currentTime += _config.Tau;
+            _currentTime += Config.Tau;
             return false;
         }
 
         private void RedrawSlice(int id)
         {
-            for (int i = 0; i < _config.Size; i++)
+            for (int i = 0; i < Config.Size; i++)
             {
-                for (int j = 0; j < _config.Size; j++)
+                for (int j = 0; j < Config.Size; j++)
                 {
                     switch(id)
                     {
                         case 0:
-                            _config.XTarget.SetPixel(j, i, ConvertTemperatureToColor(_u[GetPos(_config.TargetSlice[0], i, j)]));
-                            _config.XTarget.Apply();
+                            Config.XTarget.SetPixel(j, i, ConvertTemperatureToColor(U[GetPos(Config.TargetSlice[0], i, j)]));
+                            Config.XTarget.Apply();
                             break;
                         case 1:
-                            _config.YTarget.SetPixel(i, j, ConvertTemperatureToColor(_u[GetPos(i, _config.TargetSlice[1], j)]));
-                            _config.YTarget.Apply();
+                            Config.YTarget.SetPixel(i, j, ConvertTemperatureToColor(U[GetPos(i, Config.TargetSlice[1], j)]));
+                            Config.YTarget.Apply();
                             break;
                         case 2:
-                            _config.ZTarget.SetPixel(i, j, ConvertTemperatureToColor(_u[GetPos(i, j, _config.TargetSlice[2])]));
-                            _config.ZTarget.Apply();
+                            Config.ZTarget.SetPixel(i, j, ConvertTemperatureToColor(U[GetPos(i, j, Config.TargetSlice[2])]));
+                            Config.ZTarget.Apply();
                             break;
                     }
                 }
@@ -114,27 +114,27 @@ namespace TemperatureSimulator
 
         private void SetBorderValue(int i, int j, int k, int idBorder)
         {
-            _u[GetPos(i, j, k)] = Utilities.Functions(i, j, k, GetPos(i, j, k), _config.BorderÑonditions[idBorder], _config.H);
-            _uNew[GetPos(i, j, k)] = Utilities.Functions(i, j, k, GetPos(i, j, k), _config.BorderÑonditions[idBorder], _config.H);
+            U[GetPos(i, j, k)] = Utilities.Functions(i, j, k, GetPos(i, j, k), Config.BorderÑonditions[idBorder], Config.H, _currentTime);
+            _uNew[GetPos(i, j, k)] = Utilities.Functions(i, j, k, GetPos(i, j, k), Config.BorderÑonditions[idBorder], Config.H, _currentTime);
         }
 
         public override void Init(Config config)
         {
-            _config = config;
-            _u = new float[_config.Size * _config.Size * _config.Size];
-            _uNew = new float[_u.Length];
-            for (int i = 0; i < _u.Length; i++)
+            Config = config;
+            U = new float[Config.Size * Config.Size * Config.Size];
+            _uNew = new float[U.Length];
+            for (int i = 0; i < U.Length; i++)
             {
-                _u[i] = 0;
+                U[i] = 0;
                 _uNew[i] = 0;
             }
-            _coef = _config.Alfa * _config.Alfa * _config.Tau / (_config.H * _config.H);
+            _coef = Config.Alfa * Config.Alfa * Config.Tau / (Config.H * Config.H);
         }
 
         public override void SetSlice(int coord, int num)
         {
-            _config.TargetSlice[coord] = (int)Mathf.Clamp(num+_config.Size/2,0, _config.Size-1);
-            RedrawSlice(num);
+            Config.TargetSlice[coord] = (int)Mathf.Clamp(num+Config.Size/2,0, Config.Size-1);
+            RedrawSlice(coord);
         }
 
     }
