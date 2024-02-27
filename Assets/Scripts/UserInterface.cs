@@ -5,6 +5,7 @@ using TMPro;
 using TemperatureSimulator;
 using UnityEngine.UI;
 using System.Threading.Tasks;
+using System;
 
 public class UserInterface : MonoBehaviour
 {
@@ -19,7 +20,6 @@ public class UserInterface : MonoBehaviour
     public TMP_Dropdown[] BorderFields;
     public List<TMP_Dropdown.OptionData> BorderFieldsData;
     public Button SwitchBtn;
-
     public Slice[] Targets;
 
     private float _interval;
@@ -28,17 +28,15 @@ public class UserInterface : MonoBehaviour
     private bool _run = false;
     private bool _isFinish = true;
     private Vector3[] _defaultPositions = new Vector3[3];
+
+    public Calculator CurrentCalculator { get => _CurrentCalculator;  }
+
     private void Start()
     {
         SwitchBtn.onClick.AddListener(
-            () => {
-                if (_isFinish)
-                    Init();
-                _run = !_run;
-                if (_run)
-                    SwitchBtn.GetComponentInChildren<TMP_Text>().text = "œ‡ÛÁ‡";
-                else
-                    SwitchBtn.GetComponentInChildren<TMP_Text>().text = "«‡ÔÛÒÍ";
+            () =>
+            {
+                SwitchMode();
             });
         for (int i = 0; i < BorderFields.Length; i++)
         {
@@ -46,10 +44,41 @@ public class UserInterface : MonoBehaviour
         }
     }
 
-    private void Init()
+    public void SwitchMode()
+    {
+        if (_isFinish)
+            Init();
+        _run = !_run;
+        if (_run)
+            SwitchBtn.GetComponentInChildren<TMP_Text>().text = "œ‡ÛÁ‡";
+        else
+            SwitchBtn.GetComponentInChildren<TMP_Text>().text = "«‡ÔÛÒÍ";
+    }
+
+    public void Init()
     {
         _isFinish = false;
         _currentCooldown = 0;
+        Config config = BuildConfig();
+
+        if (TypeCalculator.value == 0)
+        {
+            _CurrentCalculator = new Consistently();
+        }
+        else
+        {
+            _CurrentCalculator = new TemperatureSimulator.Parallel();
+        }
+        CurrentCalculator.Init(config);
+        for (int i = 0; i < Targets.Length; i++)
+        {
+            int id = i;
+            Targets[i].SliceChange += (int t) => { CurrentCalculator.SetSlice(id, t); };
+        }
+    }
+
+    public Config BuildConfig()
+    {
         Config config = new Config();
         config.Alfa = float.Parse(AlphaField.text);
         config.H = float.Parse(HField.text);
@@ -58,14 +87,21 @@ public class UserInterface : MonoBehaviour
         config.TimeMax = float.Parse(TimeMaxField.text);
         config.MaxTemperature = 200;
 
+        if (config.Alfa * config.Alfa * config.Tau / (config.H * config.H) > 1)
+        {
+            return null;
+        }
+
+
         _interval = float.Parse(TimeIntervalField.text);
 
         for (int i = 0; i < Targets.Length; i++)
         {
             Targets[i].MeshRenderer.material.mainTexture = new Texture2D(config.Size, config.Size);
             Targets[i].MeshRenderer.material.mainTexture.filterMode = FilterMode.Point;
+
             Targets[i].SetDivisions(config.Size);
-            Targets[i].SetPosition(-config.Size/2+1);
+            Targets[i].SetPosition(-config.Size / 2 + 1);
         }
 
         for (int i = 0; i < config.Border—onditions.Length; i++)
@@ -76,21 +112,7 @@ public class UserInterface : MonoBehaviour
         config.XTarget = Targets[0].MeshRenderer.material.mainTexture as Texture2D;
         config.YTarget = Targets[1].MeshRenderer.material.mainTexture as Texture2D;
         config.ZTarget = Targets[2].MeshRenderer.material.mainTexture as Texture2D;
-
-        if (TypeCalculator.value == 0)
-        {
-            _CurrentCalculator = new Consistently();
-            _CurrentCalculator.Init(config);
-            for (int i = 0; i < Targets.Length; i++)
-            {
-                int id = i;
-                Targets[i].SliceChange += (int t) => { _CurrentCalculator.SetSlice(id, t); };
-            }
-        }
-        else
-        {
-
-        }
+        return config;
     }
 
     private void Update()
@@ -100,7 +122,7 @@ public class UserInterface : MonoBehaviour
             if (_currentCooldown >= _interval)
             {
                 _currentCooldown = 0;
-                if (_CurrentCalculator.CalculateStep())
+                if (CurrentCalculator.CalculateStep())
                 {
                     _run = false;
                     _isFinish = true;
