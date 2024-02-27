@@ -1,0 +1,104 @@
+#pragma kernel CSMain
+
+
+RWTexture2D<float4> ResultX;
+RWTexture2D<float4> ResultY;
+RWTexture2D<float4> ResultZ;
+
+RWStructuredBuffer<float> u;
+RWStructuredBuffer<float> uNew;
+RWStructuredBuffer<int> borders;
+RWStructuredBuffer<int> slices;
+
+float h;
+float currentTime;
+int size;
+float Resolution;
+float coef;
+float temperatureMax;
+bool isNew;
+
+uint GetPos(int x, int y, int z) {
+    return x *size* size + y * size + z;
+}
+
+float Func(int x, int y, int z, float valueInPos, int funcId, float H, float time) {
+    switch (funcId)
+    {
+        case 0:
+            return 200;
+        case 1:
+            return 0;
+        case 2:
+            return 20 * (x * H);
+        case 3:
+            return 20 * (y * H);
+        case 4:
+            return 20 * (z * H);
+        case 5:
+            return 20 * x * y;
+        case 6:
+            return 5 * time;
+    }
+    return 0;
+}
+
+int SetBorderValue(int i, int j, int k, int idBorder)
+{
+    u[GetPos(i, j, k)] = Func(i, j, k, GetPos(i, j, k), borders[idBorder], h, currentTime);
+    uNew[GetPos(i, j, k)] = Func(i, j, k, GetPos(i, j, k), borders[idBorder], h, currentTime);
+    return 0;
+}
+
+
+[numthreads(8, 8, 8)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    int3 realId = id;
+    int pos = GetPos(realId.x, realId.y, realId.z);
+    
+    if (realId.x == 0)
+    {
+        SetBorderValue(realId.x, realId.y, realId.z, 0);
+    }
+    else if (realId.x == size - 1)
+    {
+        SetBorderValue(realId.x, realId.y, realId.z, 1);
+    }
+    else if (realId.y == 0)
+    {
+        SetBorderValue(realId.x, realId.y, realId.z, 2);
+    }
+    else if (realId.y == size - 1)
+    {
+        SetBorderValue(realId.x, realId.y, realId.z, 3);
+    }
+    else if (realId.z == 0)
+    {
+        SetBorderValue(realId.x, realId.y, realId.z, 4);
+    }
+    else if (realId.z == size - 1)
+    {
+        SetBorderValue(realId.x, realId.y, realId.z, 5);
+    }
+    else
+    {
+        u[pos] = u[pos] + coef * (
+            u[GetPos(realId.x - 1, realId.y, realId.z)] +
+            u[GetPos(realId.x + 1, realId.y, realId.z)] +
+            u[GetPos(realId.x, realId.y - 1, realId.z)] +
+            u[GetPos(realId.x, realId.y + 1, realId.z)] +
+            u[GetPos(realId.x, realId.y, realId.z - 1)] +
+            u[GetPos(realId.x, realId.y, realId.z + 1)] -
+            6 * u[pos]);
+    }
+    
+    float ratio = u[pos] / temperatureMax;
+    if (realId.x == slices[0])
+        ResultX[realId.yz] = float4(ratio, 1 - ratio, 1 - ratio, 1.0);
+    if (realId.y == slices[1])
+        ResultY[realId.xz] = float4(ratio, 1 - ratio, 1 - ratio, 1.0);
+    if (realId.z == slices[2])
+        ResultZ[realId.xy] = float4(ratio, 1 - ratio, 1 - ratio, 1.0);
+}
+
