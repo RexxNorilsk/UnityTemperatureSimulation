@@ -5,7 +5,8 @@ namespace TemperatureSimulator
 {
     public static class Utilities
     {
-        public static float Functions(int x, int y, int z, float valueInPos, int funcId, float H)
+
+        public static float Functions(int x, int y, int z, float valueInPos, int funcId, float H, float time)
         {
             switch (funcId)
             {
@@ -14,13 +15,15 @@ namespace TemperatureSimulator
                 case 1:
                     return 0;
                 case 2:
-                    return 200 * (x * H);
+                    return 20 * (x * H);
                 case 3:
-                    return 200 * (y * H);
+                    return 20 * (y * H);
                 case 4:
-                    return 200 * (z * H);
+                    return 20 * (z * H);
                 case 5:
-                    return 200 * x * y;
+                    return 20 * x * y;
+                case 6:
+                    return 5 * time;
             }
             return 0;
         }
